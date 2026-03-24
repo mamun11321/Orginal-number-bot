@@ -1,7 +1,6 @@
 {
   "name": "update-otp-bot",
   "version": "2.0.0",
-  "description": "Telegram OTP Bot",
   "main": "orginalnumberbot.js",
   "scripts": {
     "start": "node orginalnumberbot.js"
