@@ -4,18 +4,18 @@ const fs = require("fs");
 const path = require("path");
 const { authenticator } = require('otplib');
 
-/******************** CONFIG (from environment) ********************/
-const BOT_TOKEN = process.env.BOT_TOKEN;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-const NUMBERS_PER_USER = parseInt(process.env.NUMBERS_PER_USER) || 2;
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "@rana1132";
+/******************** CONFIG (hardcoded) ********************/
+const BOT_TOKEN = "8616303624:AAE4-fTR-YQuPD3KEAFzLqc5WQP4wfqWw3I";
+const ADMIN_PASSWORD = "mamun1132";
+const NUMBERS_PER_USER = 2;
+const ADMIN_USERNAME = "@rana1132";
 
-const MAIN_CHANNEL = process.env.MAIN_CHANNEL || "@updaterange";
-const CHAT_GROUP = process.env.CHAT_GROUP || "@updaterange1";
-const OTP_GROUP = process.env.OTP_GROUP || "@otpreceived1";
-const OTP_GROUP_ID = parseInt(process.env.OTP_GROUP_ID) || -1001153782407;
-const USER_CSV_CHAT_ID = parseInt(process.env.USER_CSV_CHAT_ID) || -5168617650;
-const DEFAULT_EARNINGS = parseFloat(process.env.DEFAULT_EARNINGS) || 0.25;
+const MAIN_CHANNEL = "@updaterange";
+const CHAT_GROUP = "@updaterange1";
+const OTP_GROUP = "@otpreceived1";
+const OTP_GROUP_ID = -1001153782407;
+const USER_CSV_CHAT_ID = -5168617650;
+const DEFAULT_EARNINGS = 0.25;
 
 // Configure otplib
 if (authenticator && authenticator.options) {
@@ -27,7 +27,7 @@ if (authenticator && authenticator.options) {
 }
 
 if (!BOT_TOKEN) {
-  console.error("❌ BOT_TOKEN not set in environment variables");
+  console.error("❌ BOT_TOKEN not set");
   process.exit(1);
 }
 
@@ -1153,7 +1153,6 @@ bot.command("adminlogin", async (ctx) => {
   try {
     const parts = ctx.message.text.split(' ');
     if (parts.length < 2) {
-      // No message sent for missing password
       return;
     }
     const password = parts[1];
@@ -1184,7 +1183,6 @@ bot.command("adminlogin", async (ctx) => {
 bot.command("admin", async (ctx) => {
   try {
     if (!ctx.session.isAdmin) {
-      // No message sent for non-admin
       return;
     }
     const adminMessage = 
