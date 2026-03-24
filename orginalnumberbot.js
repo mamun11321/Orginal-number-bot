@@ -1,25 +1,21 @@
 /******************** IMPORTS ********************/
-const { Telegraf, session, Markup } = require("telegraf");
+const { Telegraf, session } = require("telegraf");
 const fs = require("fs");
 const path = require("path");
 const { authenticator } = require('otplib');
 
-/******************** CONFIG ********************/
-const BOT_TOKEN = "8616303624:AAE4-fTR-YQuPD3KEAFzLqc5WQP4wfqWw3I";
-const ADMIN_PASSWORD = "mamun1132";
-const NUMBERS_PER_USER = 2;
-const ADMIN_USERNAME = "@rana1132";
+/******************** CONFIG (from environment) ********************/
+const BOT_TOKEN = process.env.BOT_TOKEN;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const NUMBERS_PER_USER = parseInt(process.env.NUMBERS_PER_USER) || 2;
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "@rana1132";
 
-const MAIN_CHANNEL = "@updaterange";
-const CHAT_GROUP = "@updaterange1";
-const OTP_GROUP = "@otpreceived1";
-const OTP_GROUP_ID = -1001153782407;
-
-// CSV Backup Group
-const USER_CSV_CHAT_ID = -5168617650;
-
-// Default earnings per OTP
-const DEFAULT_EARNINGS = 0.25;
+const MAIN_CHANNEL = process.env.MAIN_CHANNEL || "@updaterange";
+const CHAT_GROUP = process.env.CHAT_GROUP || "@updaterange1";
+const OTP_GROUP = process.env.OTP_GROUP || "@otpreceived1";
+const OTP_GROUP_ID = parseInt(process.env.OTP_GROUP_ID) || -1001153782407;
+const USER_CSV_CHAT_ID = parseInt(process.env.USER_CSV_CHAT_ID) || -5168617650;
+const DEFAULT_EARNINGS = parseFloat(process.env.DEFAULT_EARNINGS) || 0.25;
 
 // Configure otplib
 if (authenticator && authenticator.options) {
@@ -31,7 +27,7 @@ if (authenticator && authenticator.options) {
 }
 
 if (!BOT_TOKEN) {
-  console.error("❌ BOT_TOKEN not set correctly");
+  console.error("❌ BOT_TOKEN not set in environment variables");
   process.exit(1);
 }
 
@@ -170,7 +166,6 @@ if (fs.existsSync(USER_BALANCES_FILE)) {
   }
 }
 
-// 2FA Data Storage
 let twoFactorData = {};
 
 /******************** HELPER FUNCTIONS ********************/
@@ -416,8 +411,6 @@ async function safeEditMessage(ctx, text, extra = {}) {
 }
 
 /******************** UI FUNCTIONS ********************/
-
-// Start Message
 async function showStartMessage(ctx) {
   const message = 
     `*UPDATE OTP BOT 2.0*\n\n` +
@@ -439,7 +432,6 @@ async function showStartMessage(ctx) {
   });
 }
 
-// Verification Success
 async function showVerificationSuccess(ctx) {
   const message = 
     `*UPDATE OTP BOT 2.0*\n\n` +
@@ -449,7 +441,6 @@ async function showVerificationSuccess(ctx) {
   await showMainMenu(ctx);
 }
 
-// Main Menu
 async function showMainMenu(ctx) {
   await ctx.reply(
     `*UPDATE OTP BOT 2.0*`,
@@ -467,7 +458,6 @@ async function showMainMenu(ctx) {
   );
 }
 
-// Service List Message
 async function showServiceListMessage(ctx) {
   const serviceButtons = [];
   for (const serviceId in services) {
@@ -495,7 +485,6 @@ async function showServiceListMessage(ctx) {
   });
 }
 
-// Country Selection Message
 async function showServiceSelectionMessage(ctx, serviceId) {
   const service = services[serviceId];
   const availableCountries = getAvailableCountriesForService(serviceId);
@@ -522,7 +511,6 @@ async function showServiceSelectionMessage(ctx, serviceId) {
   });
 }
 
-// Numbers Message
 async function showNumbersMessage(ctx, numbers, serviceId, countryCode, messageId = null) {
   const service = services[serviceId];
   const country = countries[countryCode];
@@ -568,8 +556,6 @@ async function showNumbersMessage(ctx, numbers, serviceId, countryCode, messageI
     });
   }
 }
-
-/******************** 2FA SYSTEM ********************/
 
 async function show2FAMenu(ctx) {
   const message = 
@@ -1167,7 +1153,7 @@ bot.command("adminlogin", async (ctx) => {
   try {
     const parts = ctx.message.text.split(' ');
     if (parts.length < 2) {
-      // Do nothing – no message sent
+      // No message sent for missing password
       return;
     }
     const password = parts[1];
@@ -1198,7 +1184,7 @@ bot.command("adminlogin", async (ctx) => {
 bot.command("admin", async (ctx) => {
   try {
     if (!ctx.session.isAdmin) {
-      // Do nothing – no message sent
+      // No message sent for non-admin
       return;
     }
     const adminMessage = 
@@ -1231,8 +1217,6 @@ bot.command("admin", async (ctx) => {
 });
 
 /******************** ADMIN ACTION HANDLERS ********************/
-
-// Stock Report
 bot.action("admin_stock", async (ctx) => {
   if (!ctx.session.isAdmin) return ctx.answerCbQuery("❌ Admin only");
   await ctx.answerCbQuery("⏳ Loading stock report...");
@@ -1267,7 +1251,6 @@ bot.action("admin_stock", async (ctx) => {
   });
 });
 
-// User Statistics
 bot.action("admin_users", async (ctx) => {
   if (!ctx.session.isAdmin) return ctx.answerCbQuery("❌ Admin only");
   await ctx.answerCbQuery("⏳ Loading user statistics...");
@@ -1298,7 +1281,6 @@ bot.action("admin_users", async (ctx) => {
   });
 });
 
-// Upload Numbers
 bot.action("admin_upload", async (ctx) => {
   if (!ctx.session.isAdmin) return ctx.answerCbQuery("❌ Admin only");
   ctx.session.adminState = "waiting_upload";
@@ -1327,7 +1309,6 @@ bot.action(/^admin_select_service:(.+)$/, async (ctx) => {
   });
 });
 
-// Add Numbers (manual)
 bot.action("admin_add_numbers", async (ctx) => {
   if (!ctx.session.isAdmin) return ctx.answerCbQuery("❌ Admin only");
   ctx.session.adminState = "waiting_add_numbers";
@@ -1337,7 +1318,6 @@ bot.action("admin_add_numbers", async (ctx) => {
   });
 });
 
-// Add Country
 bot.action("admin_add_country", async (ctx) => {
   if (!ctx.session.isAdmin) return ctx.answerCbQuery("❌ Admin only");
   ctx.session.adminState = "waiting_add_country";
@@ -1347,7 +1327,6 @@ bot.action("admin_add_country", async (ctx) => {
   });
 });
 
-// Add Service
 bot.action("admin_add_service", async (ctx) => {
   if (!ctx.session.isAdmin) return ctx.answerCbQuery("❌ Admin only");
   ctx.session.adminState = "waiting_add_service";
@@ -1357,7 +1336,6 @@ bot.action("admin_add_service", async (ctx) => {
   });
 });
 
-// Delete Numbers
 bot.action("admin_delete", async (ctx) => {
   if (!ctx.session.isAdmin) return ctx.answerCbQuery("❌ Admin only");
   let report = "❌ *Delete Numbers*\n\nSelect which numbers to delete:\n\n";
@@ -1409,7 +1387,6 @@ bot.action(/^admin_delete_execute:(.+):(.+)$/, async (ctx) => {
   );
 });
 
-// Delete Service
 bot.action("admin_delete_service", async (ctx) => {
   if (!ctx.session.isAdmin) return ctx.answerCbQuery("❌ Admin only");
   const serviceList = Object.keys(services);
@@ -1462,7 +1439,6 @@ bot.action(/^admin_delete_service_execute:(.+)$/, async (ctx) => {
   );
 });
 
-// List Services
 bot.action("admin_list_services", async (ctx) => {
   if (!ctx.session.isAdmin) return ctx.answerCbQuery("❌ Admin only");
   let report = "📋 *Services List*\n\n";
@@ -1477,7 +1453,6 @@ bot.action("admin_list_services", async (ctx) => {
   await safeEditMessage(ctx, report, { parse_mode: "Markdown", reply_markup: { inline_keyboard: [[{ text: "🔙 Back", callback_data: "admin_back" }]] } });
 });
 
-// Broadcast
 bot.action("admin_broadcast", async (ctx) => {
   if (!ctx.session.isAdmin) return ctx.answerCbQuery("❌ Admin only");
   await safeEditMessage(ctx, `*UPDATE OTP BOT 2.0*\n\n📢 *Broadcast Options*\n\nChoose how you want to broadcast:\n\n📝 *Text Broadcast* - Send text messages to all users\n🖼️ *Media Broadcast* - Send photos, videos, documents with caption`, {
@@ -1510,7 +1485,6 @@ bot.action("admin_broadcast_media", async (ctx) => {
   });
 });
 
-// Restore CSV
 bot.action("admin_restore_csv", async (ctx) => {
   if (!ctx.session.isAdmin) return ctx.answerCbQuery("❌ Admin only");
   ctx.session.adminState = "waiting_restore_csv";
@@ -1520,7 +1494,6 @@ bot.action("admin_restore_csv", async (ctx) => {
   });
 });
 
-// Cancel & Back
 bot.action("admin_cancel", async (ctx) => {
   if (!ctx.session.isAdmin) return ctx.answerCbQuery("❌ Admin only");
   ctx.session.adminState = null;
@@ -1949,8 +1922,8 @@ async function startBot() {
   try {
     console.log("=====================================");
     console.log("🚀 Starting UPDATE OTP BOT 2.0...");
-    console.log(`🤖 Bot Token: ${BOT_TOKEN}`);
-    console.log(`🔑 Admin Password: ${ADMIN_PASSWORD}`);
+    console.log(`🤖 Bot Token: ${BOT_TOKEN ? "Set" : "Missing"}`);
+    console.log(`🔑 Admin Password: ${ADMIN_PASSWORD ? "Set" : "Missing"}`);
     console.log(`📨 OTP Group: ${OTP_GROUP}`);
     console.log(`🔢 Numbers per user: ${NUMBERS_PER_USER}`);
     console.log(`💰 Default Earnings: ${DEFAULT_EARNINGS} TK/OTP`);
